@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dragon Pool Fansite</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 2em; }
+    input, button { padding: 0.5em; margin: 0.5em; }
+  </style>
+</head>
+<body>
+  <h1>🐉 Dragon Pool</h1>
+  <p>Enter your Dragon Cave username:</p>
+  <input type="text" id="username" placeholder="e.g. DragonMaster42" />
+  <button onclick="fetchDragons()">Fetch My Dragons</button>
+  <div id="dragons"></div>
+
+  <script>
+    async function fetchDragons() {
+      const username = document.getElementById('username').value;
+      const response = await fetch(`https://dragcave.net/api/user/${username}`);
+      const xml = await response.text();
+      document.getElementById('dragons').innerText = xml;
+    }
+  </script>
+</body>
+</html>
