@@ -1,81 +1,117 @@
-<script>
-  let dragons = [];
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dragon Pool Fansite</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 2em;
+      background-color: #f9f9f9;
+    }
+    input, button {
+      padding: 0.5em;
+      margin: 0.5em;
+    }
+    #dragons {
+      margin-top: 2em;
+      text-align: left;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>🐉 Dragon Pool</h1>
+  <p>Enter your Dragon Cave username:</p>
+  <input type="text" id="username" placeholder="e.g. DragonMaster42" />
+  <button onclick="fetchDragons()">Fetch My Dragons</button>
+  <button onclick="showRandomPool()">View Random Pool</button>
 
-  async function fetchDragons() {
-    const username = document.getElementById('username').value;
-    const response = await fetch(`https://dragcave.net/api/user/${username}`);
-    const xmlText = await response.text();
+  <div id="dragons"></div>
 
-    const parser = new DOMParser();
-    const xml = parser.parseFromString(xmlText, "application/xml");
-    const creatures = xml.querySelectorAll("dragon");
+  <script>
+    let dragons = [];
 
-    dragons = Array.from(creatures).filter(d => {
-      const stage = d.getAttribute("stage");
-      return stage === "egg" || stage === "hatchling";
-    });
+    async function fetchDragons() {
+      const username = document.getElementById('username').value;
+      const response = await fetch(`https://dragcave.net/api/user/${username}`);
+      const xmlText = await response.text();
 
-    displayDragons();
-  }
+      const parser = new DOMParser();
+      const xml = parser.parseFromString(xmlText, "application/xml");
+      const creatures = xml.querySelectorAll("dragon");
 
-  function displayDragons() {
-    const container = document.getElementById("dragons");
-    container.innerHTML = "";
+      dragons = Array.from(creatures).filter(d => {
+        const stage = d.getAttribute("stage");
+        return stage === "egg" || stage === "hatchling";
+      });
 
-    dragons.forEach((dragon, index) => {
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.id = `dragon-${index}`;
-      checkbox.dataset.index = index;
+      displayDragons();
+    }
 
-      const label = document.createElement("label");
-      label.htmlFor = `dragon-${index}`;
-      label.innerText = `${dragon.getAttribute("name") || "Unnamed"} (${dragon.getAttribute("stage")})`;
+    function displayDragons() {
+      const container = document.getElementById("dragons");
+      container.innerHTML = "";
 
-      container.appendChild(checkbox);
-      container.appendChild(label);
-      container.appendChild(document.createElement("br"));
-    });
+      dragons.forEach((dragon, index) => {
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.id = `dragon-${index}`;
+        checkbox.dataset.index = index;
 
-    const submitBtn = document.createElement("button");
-    submitBtn.innerText = "Add Selected to Pool";
-    submitBtn.onclick = submitToPool;
-    container.appendChild(submitBtn);
-  }
+        const label = document.createElement("label");
+        label.htmlFor = `dragon-${index}`;
+        label.innerText = `${dragon.getAttribute("name") || "Unnamed"} (${dragon.getAttribute("stage")})`;
 
-  async function submitToPool() {
-    const selected = Array.from(document.querySelectorAll("input[type=checkbox]:checked"))
-      .map(cb => dragons[cb.dataset.index])
-      .map(d => ({
-        id: d.getAttribute("id"),
-        name: d.getAttribute("name"),
-        stage: d.getAttribute("stage"),
-        breed: d.getAttribute("breed"),
-        owner: document.getElementById("username").value
-      }));
+        container.appendChild(checkbox);
+        container.appendChild(label);
+        container.appendChild(document.createElement("br"));
+      });
 
-    const response = await fetch("/api/add-to-pool", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(selected)
-    });
+      const submitBtn = document.createElement("button");
+      submitBtn.innerText = "Add Selected to Pool";
+      submitBtn.onclick = submitToPool;
+      container.appendChild(submitBtn);
+    }
 
-    const result = await response.json();
-    alert(result.message || "Dragons added!");
-  }
+    async function submitToPool() {
+      const selected = Array.from(document.querySelectorAll("input[type=checkbox]:checked"))
+        .map(cb => dragons[cb.dataset.index])
+        .map(d => ({
+          id: d.getAttribute("id"),
+          name: d.getAttribute("name"),
+          stage: d.getAttribute("stage"),
+          breed: d.getAttribute("breed"),
+          owner: document.getElementById("username").value
+        }));
 
-  async function showRandomPool() {
-    const response = await fetch("/api/random-pool");
-    const pool = await response.json();
+      const response = await fetch("/api/add-to-pool", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(selected)
+      });
 
-    const container = document.getElementById("dragons");
-    container.innerHTML = "<h2>Random Dragons from the Pool</h2>";
+      const result = await response.json();
+      alert(result.message || "Dragons added!");
+    }
 
-    pool.forEach(d => {
-      const div = document.createElement("div");
-      div.innerText = `${d.name || "Unnamed"} (${d.stage}) - ${d.breed}`;
-      container.appendChild(div);
-    });
-  }
-</script>
+    async function showRandomPool() {
+      const response = await fetch("/api/random-pool");
+      const pool = await response.json();
 
+      const container = document.getElementById("dragons");
+      container.innerHTML = "<h2>Random Dragons from the Pool</h2>";
+
+      pool.forEach(d => {
+        const div = document.createElement("div");
+        div.innerText = `${d.name || "Unnamed"} (${d.stage}) - ${d.breed}`;
+        container.appendChild(div);
+      });
+    }
+  </script>
+</body>
+</html>
